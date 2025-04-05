@@ -11,6 +11,7 @@ interface Product {
   price: string;
   code: string;
   size: string;
+  packageSize?: string;
 }
 
 async function main() {
@@ -19,11 +20,13 @@ async function main() {
       case 'c': {
         console.log('処理を開始');
         await concat('cando');
+        rl.close();
         return;
       }
       case 'w': {
         console.log('処理を開始');
         await concat('watts');
+        rl.close();
         return;
       }
       default: {
@@ -69,19 +72,29 @@ async function concat(type: 'cando' | 'watts') {
         code: values[2],
         size: values[3],
       };
+      if (type === 'watts') {
+        product['packageSize'] = values[4];
+      }
       allProducts.push(product);
     }
   }
 
   // 結合したデータをCSVファイルに出力
+  const header = [
+    { id: 'name', title: '商品名' },
+    { id: 'price', title: '価格' },
+    { id: 'code', title: 'JANコード' },
+    { id: 'size', title: '本体サイズ' },
+  ];
+  if (type === 'watts') {
+    header.push({
+      id: 'package_size',
+      title: 'パッケージサイズ',
+    });
+  }
   const csvWriter = createObjectCsvWriter({
     path: outputFile,
-    header: [
-      { id: 'name', title: '商品名' },
-      { id: 'price', title: '価格' },
-      { id: 'code', title: 'JANコード' },
-      { id: 'size', title: '本体サイズ' },
-    ],
+    header,
     encoding: 'utf8',
   });
 
