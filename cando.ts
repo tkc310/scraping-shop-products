@@ -48,10 +48,7 @@ async function recursiveScrape({
   );
   console.log(`総件数: ${total}件 | 総ページ数${Math.ceil(total / PER_PAGE_COUNT)}ページ`);
 
-  const products: Product[] = await scrape({
-    page,
-    url,
-  });
+  const products: Product[] = await scrape(page);
   await writeToCSV(products, count);
   console.log(`${count}ページ目完了 | 完了率: ${(PER_PAGE_COUNT / total) * 100}%`);
 
@@ -59,7 +56,7 @@ async function recursiveScrape({
   await recursiveScrape({ page, url: nextUrl, count: count + 1 });
 }
 
-async function scrape({ page, url }: { page: Page; url: string }) {
+async function scrape(page: Page) {
   const products: Product[] = [];
   const productLinks = await page.$$eval('.item-list-name a', (links) =>
     links.map((link) => link.href)
@@ -69,18 +66,22 @@ async function scrape({ page, url }: { page: Page; url: string }) {
     await page.goto(link, { waitUntil: 'domcontentloaded' });
 
     const product = await page.evaluate(() => {
-      const name = document.querySelector('.item-name')?.textContent?.trim() || '';
-      const price =
-        document.querySelector('[data-id="makeshop-item-price:1"]')?.textContent?.trim() || '';
-      const code = document.querySelector('.original-code .value')?.textContent?.trim() || '';
-      const size =
-        document
-          .querySelector('.item-description-01')
-          ?.textContent?.match(/本体サイズ\(約\)：([a-zA-Z0-9×]+)/)?.[1]
-          ?.trim() || '';
+      const name = document.querySelector('.item-name')?.textContent?.trim();
+      const price = document
+        .querySelector('[data-id="makeshop-item-price:1"]')
+        ?.textContent?.trim();
+      const code = document.querySelector('.original-code .value')?.textContent?.trim();
+      const size = document
+        .querySelector('.item-description-01')
+        ?.textContent?.match(/本体サイズ\(約\)：([a-zA-Z0-9×]+)/)?.[1]
+        ?.trim();
 
-      const normalize = (value: string) => {
-        return value.trim().replace(/\r?\n/g, '');
+      const normalize = (value: string | null | undefined) => {
+        return (
+          String(value || '')
+            .trim()
+            .replace(/\r?\n/g, '') || '-'
+        );
       };
 
       const product = {
