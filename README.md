@@ -6,6 +6,6 @@
 $ pnpm i
 $ pnpm scrape:cando
 $ pnpm scrape:watts
-$ concat_csv
+$ pnpm concat_csv
 # => c or w
 ```
