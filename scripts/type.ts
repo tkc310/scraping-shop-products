@@ -9,7 +9,7 @@ type Common = {
 export type Cando = Common;
 
 export type Watts = Common & {
-  packageSize: string;
+  package_size: string;
 };
 
 export type Product = Cando | Watts;

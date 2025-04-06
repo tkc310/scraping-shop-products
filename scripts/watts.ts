@@ -16,7 +16,10 @@ async function main() {
 
   try {
     const page = await browser.newPage();
-    await recursiveScrape({ page });
+    await page.setDefaultNavigationTimeout(60000);
+
+    const pageNum = Number(BASE_URL.match(/page=(\d+)/)?.[1] || 1);
+    await recursiveScrape({ page, count: pageNum });
   } catch (error) {
     console.error('スクレイピング中にエラーが発生しました:', error);
   } finally {
@@ -26,12 +29,12 @@ async function main() {
 
 async function recursiveScrape({
   page,
+  count,
   url = BASE_URL,
-  count = 1,
 }: {
   page: Page;
+  count: number;
   url?: string;
-  count?: number;
 }) {
   console.log(`----------${count}ページ目開始----------`);
 
@@ -42,7 +45,9 @@ async function recursiveScrape({
 
   const products: Watts[] = await scrape(page);
   await writeToCSV(products, count);
-  console.log(`${count}ページ目完了 | 完了率: ${(PER_PAGE_COUNT / total) * 100}%`);
+  console.log(
+    `${count}ページ目完了 | 完了率: ${((count / (total / PER_PAGE_COUNT)) * 100).toFixed(2)}%`
+  );
 
   if (!nextUrl) return;
   await recursiveScrape({ page, url: nextUrl, count: count + 1 });
@@ -68,7 +73,7 @@ async function scrape(page: Page) {
       const name = jsonLD['name'];
       const price = jsonLD['offers']?.[0]?.price;
       const code = jsonLD['offers']?.[0]?.gtin13;
-      const size = jsonLD['description']?.match(/【サイズ】\n(.+)/)?.[1];
+      const size = jsonLD['description']?.match(/【サイズ】[\n| ](.+)/)?.[1];
       const tableItemEls = document.querySelectorAll('.c-product-description__table td');
       const packageSize = Array.from(tableItemEls).filter((item) =>
         item.textContent?.match(/パッケージサイズ/)
@@ -87,7 +92,7 @@ async function scrape(page: Page) {
         price: normalize(price),
         code: normalize(code),
         size: normalize(size),
-        packageSize: normalize(packageSize),
+        package_size: normalize(packageSize),
         url: normalize(location.href),
       };
 

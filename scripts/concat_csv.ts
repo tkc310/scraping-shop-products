@@ -73,7 +73,7 @@ async function concat(type: 'cando' | 'watts') {
               price: values[1],
               code: values[2],
               size: values[3],
-              packageSize: values[4],
+              package_size: values[4],
               url: values[5],
             };
       allProducts.push(product);
@@ -85,14 +85,14 @@ async function concat(type: 'cando' | 'watts') {
     type === 'cando'
       ? [
           { id: 'name', title: '商品名' },
-          { id: 'price', title: '価格' },
+          { id: 'price', title: '価格(円)' },
           { id: 'code', title: 'JANコード' },
           { id: 'size', title: '本体サイズ' },
           { id: 'url', title: 'URL' },
         ]
       : [
           { id: 'name', title: '商品名' },
-          { id: 'price', title: '価格' },
+          { id: 'price', title: '価格(円)' },
           { id: 'code', title: 'JANコード' },
           { id: 'size', title: '本体サイズ' },
           { id: 'package_size', title: 'パッケージサイズ' },
