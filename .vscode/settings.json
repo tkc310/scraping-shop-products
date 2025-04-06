@@ -23,5 +23,8 @@
   "search.exclude": { ".history": true },
   "files.exclude": { ".history": true },
   "redhat.telemetry.enabled": true,
-  "gitlens.advanced.messages": { "suppressGitMissingWarning": true }
+  "gitlens.advanced.messages": {
+    "suppressGitMissingWarning": true
+  },
+  "cSpell.words": ["Cando"]
 }
