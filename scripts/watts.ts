@@ -2,16 +2,10 @@ import puppeteer, { Page } from 'puppeteer';
 import { createObjectCsvWriter } from 'csv-writer';
 import * as fs from 'fs';
 import * as path from 'path';
-
-interface Product {
-  name: string;
-  price: string;
-  code: string;
-  size: string;
-  packageSize: string;
-}
+import { Watts } from './type';
 
 const BASE_URL = 'https://watts-online.jp/collections/all';
+// ?page=2
 const PER_PAGE_COUNT = 48;
 
 async function main() {
@@ -46,7 +40,7 @@ async function recursiveScrape({
   const nextUrl = await page.$eval('a.pagination__next', (btn) => btn?.href || '');
   console.log(`総件数: ${total}件 | 総ページ数${Math.ceil(total / PER_PAGE_COUNT)}ページ`);
 
-  const products: Product[] = await scrape(page);
+  const products: Watts[] = await scrape(page);
   await writeToCSV(products, count);
   console.log(`${count}ページ目完了 | 完了率: ${(PER_PAGE_COUNT / total) * 100}%`);
 
@@ -55,7 +49,7 @@ async function recursiveScrape({
 }
 
 async function scrape(page: Page) {
-  const products: Product[] = [];
+  const products: Watts[] = [];
   const productLinks = await page.$$eval(
     '.collection__dynamic-part a.product-item__title',
     (links) => links.map((link) => link.href)
@@ -88,12 +82,13 @@ async function scrape(page: Page) {
         );
       };
 
-      const product: Product = {
+      const product: Watts = {
         name: normalize(name),
         price: normalize(price),
         code: normalize(code),
         size: normalize(size),
         packageSize: normalize(packageSize),
+        url: normalize(location.href),
       };
 
       return product;
@@ -113,10 +108,10 @@ async function getTotal(page: Page) {
   });
 }
 
-async function writeToCSV(products: Product[], pageNum: number) {
-  const outputDir = path.join(__dirname, 'output/watts');
+async function writeToCSV(products: Watts[], pageNum: number) {
+  const outputDir = path.join(__dirname, '../output/watts');
   if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir);
+    fs.mkdirSync(outputDir, { recursive: true });
   }
 
   const csvWriter = createObjectCsvWriter({
@@ -127,6 +122,7 @@ async function writeToCSV(products: Product[], pageNum: number) {
       { id: 'code', title: 'JANコード' },
       { id: 'size', title: '本体サイズ' },
       { id: 'package_size', title: 'パッケージサイズ' },
+      { id: 'url', title: 'URL' },
     ],
     encoding: 'utf8',
   });

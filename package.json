@@ -1,9 +1,9 @@
 {
   "private": true,
   "scripts": {
-    "scrape:cando": "ts-node cando.ts",
-    "scrape:watts": "ts-node watts.ts",
-    "concat_csv": "ts-node concat_csv.ts",
+    "scrape:cando": "ts-node scripts/cando.ts",
+    "scrape:watts": "ts-node scripts/watts.ts",
+    "concat_csv": "ts-node scripts/concat_csv.ts",
     "format": "prettier --write \"**/*.{ts,js,json}\""
   },
   "packageManager": "pnpm@10.6.5",

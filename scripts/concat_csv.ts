@@ -3,16 +3,9 @@ import * as path from 'path';
 import { createObjectCsvWriter } from 'csv-writer';
 import { stdin as input, stdout as output } from 'node:process';
 import * as readline from 'node:readline';
+import { Product } from './type';
 
 const rl = readline.createInterface({ input, output });
-
-interface Product {
-  name: string;
-  price: string;
-  code: string;
-  size: string;
-  packageSize?: string;
-}
 
 async function main() {
   await rl.question('結合対象のファイル種別 c (cando) or w (watts): ', async (answer) => {
@@ -38,8 +31,8 @@ async function main() {
 }
 
 async function concat(type: 'cando' | 'watts') {
-  const inputDir = path.join(__dirname, `output/${type}`);
-  const outputFile = path.join(__dirname, `output/${type}`, 'all.csv');
+  const inputDir = path.join(__dirname, `../output/${type}`);
+  const outputFile = path.join(__dirname, `../output/${type}`, 'all.csv');
 
   // 入力ディレクトリ内のCSVファイルを取得
   const files = fs
@@ -66,32 +59,46 @@ async function concat(type: 'cando' | 'watts') {
       if (!lines[i].trim()) continue;
 
       const values = lines[i].split(',');
-      const product: Product = {
-        name: values[0],
-        price: values[1],
-        code: values[2],
-        size: values[3],
-      };
-      if (type === 'watts') {
-        product['packageSize'] = values[4];
-      }
+      const product: Product =
+        type === 'cando'
+          ? {
+              name: values[0],
+              price: values[1],
+              code: values[2],
+              size: values[3],
+              url: values[4],
+            }
+          : {
+              name: values[0],
+              price: values[1],
+              code: values[2],
+              size: values[3],
+              packageSize: values[4],
+              url: values[5],
+            };
       allProducts.push(product);
     }
   }
 
   // 結合したデータをCSVファイルに出力
-  const header = [
-    { id: 'name', title: '商品名' },
-    { id: 'price', title: '価格' },
-    { id: 'code', title: 'JANコード' },
-    { id: 'size', title: '本体サイズ' },
-  ];
-  if (type === 'watts') {
-    header.push({
-      id: 'package_size',
-      title: 'パッケージサイズ',
-    });
-  }
+  const header =
+    type === 'cando'
+      ? [
+          { id: 'name', title: '商品名' },
+          { id: 'price', title: '価格' },
+          { id: 'code', title: 'JANコード' },
+          { id: 'size', title: '本体サイズ' },
+          { id: 'url', title: 'URL' },
+        ]
+      : [
+          { id: 'name', title: '商品名' },
+          { id: 'price', title: '価格' },
+          { id: 'code', title: 'JANコード' },
+          { id: 'size', title: '本体サイズ' },
+          { id: 'package_size', title: 'パッケージサイズ' },
+          { id: 'url', title: 'URL' },
+        ];
+
   const csvWriter = createObjectCsvWriter({
     path: outputFile,
     header,
