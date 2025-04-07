@@ -40,10 +40,10 @@ async function recursiveScrape({
 
   await page.goto(url, { waitUntil: 'domcontentloaded' });
   const total = await getTotal(page);
-  const nextUrl = await page.$eval(
-    '.btn-prev',
-    (btn) => (btn?.parentNode as HTMLAnchorElement)?.href || ''
-  );
+  const nextUrl = await page.$$eval('.btn-prev', (btns) => {
+    if (btns.length < 2) return '';
+    return (btns[btns.length - 1]?.parentNode as HTMLAnchorElement)?.href || '';
+  });
   console.log(`総件数: ${total}件 | 総ページ数${Math.ceil(total / PER_PAGE_COUNT)}ページ`);
 
   const products: Cando[] = await scrape(page);
