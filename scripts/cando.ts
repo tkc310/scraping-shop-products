@@ -5,7 +5,7 @@ import * as path from 'path';
 import { Cando } from './type';
 
 const BASE_URL = 'https://netshop.cando-web.co.jp/view/category/all_items';
-// ?page=2
+// const BASE_URL = 'https://netshop.cando-web.co.jp/view/category/all_items?page=2';
 const PER_PAGE_COUNT = 48;
 
 async function main() {
@@ -40,11 +40,15 @@ async function recursiveScrape({
 
   await page.goto(url, { waitUntil: 'domcontentloaded' });
   const total = await getTotal(page);
-  const nextUrl = await page.$$eval('.btn-prev', (btns) => {
-    if (btns.length < 2) return '';
-    return (btns[btns.length - 1]?.parentNode as HTMLAnchorElement)?.href || '';
+  const lastPage = Math.ceil(total / PER_PAGE_COUNT);
+
+  const nextUrl = await page.$$eval('.btn-prev', async (btns) => {
+    const nextBtn = btns.filter((btn) => {
+      return btn.textContent === '次へ';
+    })[0];
+    return (nextBtn?.parentNode as HTMLAnchorElement)?.href || '';
   });
-  console.log(`総件数: ${total}件 | 総ページ数${Math.ceil(total / PER_PAGE_COUNT)}ページ`);
+  console.log(`総件数: ${total}件 | 総ページ数${lastPage}ページ`);
 
   const products: Cando[] = await scrape(page);
   await writeToCSV(products, count);
@@ -71,10 +75,10 @@ async function scrape(page: Page) {
         .querySelector('[data-id="makeshop-item-price:1"]')
         ?.textContent?.trim();
       const code = document.querySelector('.original-code .value')?.textContent?.trim();
-      const size = document
-        .querySelector('.item-description-01')
-        ?.textContent?.replaceAll('\n', '')
-        ?.match(/本体サイズ\(約\)：(.+)[色|材質]/)?.[1]
+      const sizeEl = document.querySelector('.item-description-01');
+      // @ts-ignore
+      const size = String(sizeEl?.innerText || '')
+        ?.match(/本体サイズ[\(|（]約[\)|）][:|：](.+)\n/)?.[1]
         ?.trim();
 
       const normalize = (value: string | null | undefined) => {
@@ -105,7 +109,6 @@ async function scrape(page: Page) {
 
 async function getTotal(page: Page) {
   return await page.$eval('.item-count', (el) => {
-    console.log(el);
     return Number(el.textContent?.trim()?.replace('件', '') || 0);
   });
 }
